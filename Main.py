@@ -25,7 +25,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import AdaBoostClassifier
-from keras.utils.np_utils import to_categorical
+import tensorflow
+from tensorflow import keras
 from keras.layers import  MaxPooling2D
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Convolution2D
@@ -47,7 +48,7 @@ global X_train, X_test, y_train, y_test, predict_cls
 global classifier
 
 main = tkinter.Tk()
-main.title("Comparative Study of Machine Learning Algorithms for Fraud Detection in Blockchain") #designing main screen
+main.title("Assessing the Efficacy of Machine Learning Algorithms in Detecting Fraudulent Activities on Blockchain Platform") #designing main screen
 main.geometry("1300x1200")
 
  
@@ -94,7 +95,7 @@ def trainTest():
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
     text.insert(END,"Dataset Train and Test Split\n\n")
     text.insert(END,"80% dataset records used to train ML algorithms : "+str(X_train.shape[0])+"\n")
-    text.insert(END,"20% dataset records used to train ML algorithms : "+str(X_test.shape[0])+"\n")
+    text.insert(END,"20% dataset records used to test ML algorithms : "+str(X_test.shape[0])+"\n")
 
 def calculateMetrics(algorithm, predict, y_test):
     a = accuracy_score(y_test,predict)*100
@@ -184,39 +185,13 @@ def predict():
             text.insert(END,"Test DATA : "+str(X[i])+" ===> PREDICTED AS FRAUD\n\n")
     
     
-def runDeepNetwork():
-    global X, Y
-    X = np.reshape(X, (X.shape[0], X.shape[1], 1, 1))
-    Y = to_categorical(Y)
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
-    if os.path.exists('model/model.json'):
-        with open('model/model.json', "r") as json_file:
-            loaded_model_json = json_file.read()
-            classifier = model_from_json(loaded_model_json)
-        json_file.close()
-        classifier.load_weights("model/model_weights.h5")
-        classifier._make_predict_function()   
-    else:
-        classifier = Sequential()
-        classifier.add(Convolution2D(32, 1, 1, input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3]), activation = 'relu'))
-        classifier.add(MaxPooling2D(pool_size = (1, 1)))
-        classifier.add(Convolution2D(32, 1, 1, activation = 'relu'))
-        classifier.add(MaxPooling2D(pool_size = (1, 1)))
-        classifier.add(Flatten())
-        classifier.add(Dense(output_dim = 256, activation = 'relu'))
-        classifier.add(Dense(output_dim = Y.shape[1], activation = 'softmax'))
-        print(classifier.summary())
-        classifier.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
-        hist = classifier.fit(X, Y, batch_size=16, epochs=10, shuffle=True, verbose=2)
-        classifier.save_weights('model/model_weights.h5')            
-        model_json = classifier.to_json()
-        with open("model/model.json", "w") as json_file:
-            json_file.write(model_json)
-        json_file.close()    
-    predict = classifier.predict(X_test)
-    predict = np.argmax(predict, axis=1)
-    y_test = np.argmax(y_test, axis=1)
-    calculateMetrics("Deep Neural Network", predict, y_test)
+
+
+
+
+
+
+
     
 
 def graph():
@@ -229,7 +204,6 @@ def graph():
     output+="<tr><td>Decision Tree Algorithm</td><td>"+str(accuracy[4])+"</td><td>"+str(precision[4])+"</td><td>"+str(recall[4])+"</td><td>"+str(fscore[4])+"</td></tr>"
     output+="<tr><td>SVM Algorithm</td><td>"+str(accuracy[5])+"</td><td>"+str(precision[5])+"</td><td>"+str(recall[5])+"</td><td>"+str(fscore[5])+"</td></tr>"
     output+="<tr><td>Random Forest Algorithm</td><td>"+str(accuracy[6])+"</td><td>"+str(precision[6])+"</td><td>"+str(recall[6])+"</td><td>"+str(fscore[6])+"</td></tr>"
-    output+="<tr><td>Deep Neural Network Algorithm</td><td>"+str(accuracy[7])+"</td><td>"+str(precision[7])+"</td><td>"+str(recall[7])+"</td><td>"+str(fscore[7])+"</td></tr>"
     output+="</table></body></html>"
     f = open("table.html", "w")
     f.write(output)
@@ -243,14 +217,13 @@ def graph():
                        ['Decision Tree','Precision',precision[4]],['Decision Tree','Recall',recall[4]],['Decision Tree','F1 Score',fscore[4]],['Decision Tree','Accuracy',accuracy[4]],
                        ['SVM','Precision',precision[5]],['SVM','Recall',recall[5]],['SVM','F1 Score',fscore[5]],['SVM','Accuracy',accuracy[5]],
                        ['Random Forest','Precision',precision[6]],['Random Forest','Recall',recall[6]],['Random Forest','F1 Score',fscore[6]],['Random Forest','Accuracy',accuracy[6]], 
-                       ['Deep Neural Network','Precision',precision[7]],['Deep Neural Network','Recall',recall[7]],['Deep Neural Network','F1 Score',fscore[7]],['Deep Neural Network','Accuracy',accuracy[7]], 
                       ],columns=['Parameters','Algorithms','Value'])
-    df.pivot("Parameters", "Algorithms", "Value").plot(kind='bar')
+    df.pivot(columns=[["Parameters", "Algorithms", "Value"]]).plot(kind='bar')
     plt.show()
 
 
 font = ('times', 16, 'bold')
-title = Label(main, text='Comparative Study of Machine Learning Algorithms for Fraud Detection in Blockchain')
+title = Label(main, text='Assessing the Efficacy of Machine Learning Algorithms in Detecting Fraudulent Activities on Blockchain Platform')
 title.config(bg='greenyellow', fg='dodger blue')  
 title.config(font=font)           
 title.config(height=3, width=120)       
@@ -303,17 +276,13 @@ rfButton.place(x=50,y=650)
 rfButton.config(font=font1)
 
 
-dnButton = Button(main, text="Run Deep Network Algorithm", command=runDeepNetwork)
-dnButton.place(x=330,y=650)
-dnButton.config(font=font1)
-
 graphButton = Button(main, text="Comparison Graph", command=graph)
-graphButton.place(x=630,y=650)
+graphButton.place(x=330,y=650)
 graphButton.config(font=font1)
+
 
 predictButton = Button(main, text="Predict Fraud ", command=predict)
 predictButton.place(x=950,y=650)
 predictButton.config(font=font1)
-
 main.config(bg='LightSkyBlue')
 main.mainloop()
